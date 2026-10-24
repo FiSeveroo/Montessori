@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+
+/* Paleta calma, de materiais naturais: creme, madeira, sálvia, terracota, ocre */
+:root {
+  --c-fundo: #f7f3ec;
+  --c-cartao: #ffffff;
+  --c-tinta: #3d342b;
+  --c-suave: #85786a;
+  --c-linha: #e6ded2;
+  --c-salvia: #6f8c6a;
+  --c-salvia-claro: #e5ede2;
+  --c-terracota: #c06a4c;
+  --c-terracota-claro: #f6e3dc;
+  --c-ocre: #c99a3e;
+  --c-ocre-claro: #f6ecd6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-fundo: #1d1a17;
+    --c-cartao: #282420;
+    --c-tinta: #eee6da;
+    --c-suave: #a89a8a;
+    --c-linha: #3a342e;
+    --c-salvia: #93b18d;
+    --c-salvia-claro: #2c3a2b;
+    --c-terracota: #e08c6c;
+    --c-terracota-claro: #43291f;
+    --c-ocre: #e0b765;
+    --c-ocre-claro: #3d3220;
+  }
+}
+
+@theme inline {
+  --color-fundo: var(--c-fundo);
+  --color-cartao: var(--c-cartao);
+  --color-tinta: var(--c-tinta);
+  --color-suave: var(--c-suave);
+  --color-linha: var(--c-linha);
+  --color-salvia: var(--c-salvia);
+  --color-salvia-claro: var(--c-salvia-claro);
+  --color-terracota: var(--c-terracota);
+  --color-terracota-claro: var(--c-terracota-claro);
+  --color-ocre: var(--c-ocre);
+  --color-ocre-claro: var(--c-ocre-claro);
+  --font-sans: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body {
+  background: var(--c-fundo);
+  color: var(--c-tinta);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+input,
+select,
+textarea {
+  font-size: 16px; /* evita zoom automático no iPhone */
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.campo {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--c-linha);
+  background: var(--c-cartao);
+  padding: 0.6rem 0.75rem;
+  outline: none;
+}
+
+.campo:focus {
+  border-color: var(--c-salvia);
+}
+
+.rotulo {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-suave);
+  margin-bottom: 0.25rem;
+}

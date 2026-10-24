@@ -1,0 +1,39 @@
+{
+  "name": "enxoval-montessori",
+  "version": "1.0.0",
+  "description": "Enxoval e preparação da casa (Montessori) — Filipe e Ana",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && firebase deploy --only hosting,firestore:rules",
+    "deploy:rules": "firebase deploy --only firestore:rules"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FiSeveroo/Montessori.git"
+  },
+  "author": "",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/FiSeveroo/Montessori/issues"
+  },
+  "homepage": "https://github.com/FiSeveroo/Montessori#readme",
+  "dependencies": {
+    "firebase": "^13.1.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "firebase-tools": "^15.34.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0"
+  },
+  "private": true
+}

@@ -1,0 +1,9 @@
+node_modules
+dist
+dev-dist
+.firebase
+*.log
+.env.local
+# chaves de service account nunca entram no repositório
+*service-account*.json
+*-firebase-adminsdk-*.json

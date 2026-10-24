@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Só entra quem fez login com Google e tem um documento em /acesso/{email}.
+    // Os e-mails ficam só no banco (cadastrados pelo console), nunca no repositório.
+    function permitido() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/acesso/$(request.auth.token.email));
+    }
+
+    function itemValido(d) {
+      return d.nome is string && d.nome.size() > 0 && d.nome.size() <= 300
+        && d.categoria is string
+        && d.tipo in ['Comprar', 'Fazer em casa', 'Ajuste da casa', 'Tarefa', 'Não comprar']
+        && d.status in ['Pendente', 'Em andamento', 'Feito', 'Decidido']
+        && d.links is list && d.links.size() <= 30;
+    }
+
+    // Cada pessoa só consegue ler o próprio documento de acesso (para o app saber se pode entrar).
+    match /acesso/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false;
+    }
+
+    match /itens/{id} {
+      allow read, delete: if permitido();
+      allow create, update: if permitido() && itemValido(request.resource.data);
+    }
+
+    match /categorias/{id} {
+      allow read, delete: if permitido();
+      allow create, update: if permitido()
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() > 0
+        && request.resource.data.ordem is number;
+    }
+  }
+}
