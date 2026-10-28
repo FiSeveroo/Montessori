@@ -128,6 +128,24 @@ export async function criarItem(dados: ItemDados) {
   return ref.id
 }
 
+/** Cria vários itens de uma vez (Firestore aceita até 500 escritas por batch). */
+export async function criarItens(lista: ItemDados[]) {
+  for (let i = 0; i < lista.length; i += 400) {
+    const batch = writeBatch(db)
+    for (const dados of lista.slice(i, i + 400)) {
+      const { feito_em: _a, feito_por: _b, atualizado_em: _c, criado_em: _d, ...resto } = dados
+      batch.set(doc(itensCol), {
+        ...resto,
+        ...camposDeStatus(dados.status),
+        criado_em: serverTimestamp(),
+        atualizado_por: quem(),
+        atualizado_em: serverTimestamp(),
+      })
+    }
+    await batch.commit()
+  }
+}
+
 export async function excluirItem(id: string) {
   await deleteDoc(doc(db, 'itens', id))
 }

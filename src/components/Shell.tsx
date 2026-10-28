@@ -5,6 +5,7 @@ import { atualizarItem, carregarSeed, mudarStatus, useDados } from '../data/stor
 import { lerPreco } from '../lib'
 import { NAO_COMPRAR, type Item } from '../types'
 import { Carregando } from '../App'
+import AdicionarVarios from './AdicionarVarios'
 import Categorias from './Categorias'
 import ItemSheet, { type Alvo } from './ItemSheet'
 import Lista from './Lista'
@@ -20,6 +21,7 @@ export default function Shell({ user }: { user: User }) {
   const [alvo, setAlvo] = useState<Alvo | null>(null)
   const [menu, setMenu] = useState(false)
   const [cats, setCats] = useState(false)
+  const [varios, setVarios] = useState(false)
   const [pedirPreco, setPedirPreco] = useState<Item | null>(null)
   const [semeando, setSemeando] = useState(false)
 
@@ -102,6 +104,15 @@ export default function Shell({ user }: { user: User }) {
                 <button
                   onClick={() => {
                     setMenu(false)
+                    setVarios(true)
+                  }}
+                  className="w-full px-4 py-3 text-left"
+                >
+                  Adicionar vários itens
+                </button>
+                <button
+                  onClick={() => {
+                    setMenu(false)
                     setCats(true)
                   }}
                   className="w-full px-4 py-3 text-left"
@@ -155,6 +166,7 @@ export default function Shell({ user }: { user: User }) {
           aoFechar={fechar}
         />
       )}
+      <AdicionarVarios aberto={varios} aoFechar={() => setVarios(false)} categorias={categorias} itens={itens} />
       <Categorias aberto={cats} aoFechar={() => setCats(false)} categorias={categorias} itens={itens} />
     </div>
   )
