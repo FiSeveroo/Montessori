@@ -1,12 +1,14 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { signOut, type User } from 'firebase/auth'
 import { auth } from '../firebase'
 import { atualizarItem, carregarSeed, mudarStatus, useDados } from '../data/store'
+import { sincronizarPresentes, usePresentes } from '../data/presentes'
 import { lerPreco } from '../lib'
 import { NAO_COMPRAR, type Item } from '../types'
 import { Carregando } from '../App'
 import AdicionarVarios from './AdicionarVarios'
 import Categorias from './Categorias'
+import GerenciarLista from './GerenciarLista'
 import ItemSheet, { type Alvo } from './ItemSheet'
 import Lista from './Lista'
 import NaoComprar from './NaoComprar'
@@ -17,11 +19,20 @@ type Aba = 'lista' | 'progresso' | 'nao'
 
 export default function Shell({ user }: { user: User }) {
   const { itens, categorias, carregando, erro } = useDados()
+  const { presentes, carregando: carregandoPresentes } = usePresentes(false)
   const [aba, setAba] = useState<Aba>('lista')
   const [alvo, setAlvo] = useState<Alvo | null>(null)
   const [menu, setMenu] = useState(false)
   const [cats, setCats] = useState(false)
   const [varios, setVarios] = useState(false)
+  const [lista, setLista] = useState(false)
+
+  // Mantém a página pública (/presentes) em dia e traz as compras dos convidados para os itens.
+  // As escritas aparecem no cache local na hora, então a próxima rodada já não vê diferença (sem laço).
+  useEffect(() => {
+    if (carregando || carregandoPresentes) return
+    sincronizarPresentes(itens, presentes, categorias).catch((e) => console.error('Sincronização da lista de presentes:', e))
+  }, [itens, presentes, categorias, carregando, carregandoPresentes])
   const [pedirPreco, setPedirPreco] = useState<Item | null>(null)
   const [semeando, setSemeando] = useState(false)
 
@@ -104,6 +115,15 @@ export default function Shell({ user }: { user: User }) {
                 <button
                   onClick={() => {
                     setMenu(false)
+                    setLista(true)
+                  }}
+                  className="w-full px-4 py-3 text-left font-semibold"
+                >
+                  🎁 Lista de presentes
+                </button>
+                <button
+                  onClick={() => {
+                    setMenu(false)
                     setVarios(true)
                   }}
                   className="w-full px-4 py-3 text-left"
@@ -162,10 +182,12 @@ export default function Shell({ user }: { user: User }) {
           key={alvo.tipo === 'existente' ? alvo.id : 'novo'}
           alvo={alvo}
           item={itemAberto}
+          presente={presentes.find((p) => p.id === itemAberto?.id)}
           categorias={categorias}
           aoFechar={fechar}
         />
       )}
+      <GerenciarLista aberto={lista} aoFechar={() => setLista(false)} itens={itens} categorias={categorias} presentes={presentes} />
       <AdicionarVarios aberto={varios} aoFechar={() => setVarios(false)} categorias={categorias} itens={itens} />
       <Categorias aberto={cats} aoFechar={() => setCats(false)} categorias={categorias} itens={itens} />
     </div>

@@ -1,5 +1,6 @@
 import { dataCurta, formatarBRL, precoEstimadoEfetivo } from '../lib'
 import type { Item } from '../types'
+import { FotoItem } from './Imagem'
 import { IconCheck, SeloPrioridade } from './ui'
 
 const rotuloTipo: Record<string, string> = {
@@ -37,6 +38,11 @@ export default function ItemCard({
         {feito ? <IconCheck /> : andamento ? <span className="bg-ocre h-2.5 w-2.5 rounded-full" /> : null}
       </button>
 
+      {item.imagem && (
+        <button onClick={aoAbrir} className="shrink-0" tabIndex={-1} aria-hidden>
+          <FotoItem src={item.imagem} alt="" className="border-linha h-12 w-12 rounded-lg border" />
+        </button>
+      )}
       <button onClick={aoAbrir} className="min-w-0 flex-1 text-left">
         <div className={`leading-snug font-semibold ${feito ? 'line-through' : ''}`}>{item.nome}</div>
         <div className="text-suave mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
@@ -46,6 +52,7 @@ export default function ItemCard({
               {rotuloTipo[item.tipo]}
             </span>
           )}
+          {item.na_lista && <span title="Na lista de presentes">🎁</span>}
           {andamento && <span className="text-ocre font-semibold">Em andamento</span>}
           <span>{item.fase}</span>
           {item.quantidade && item.quantidade !== '—' && <span>· {item.quantidade}</span>}

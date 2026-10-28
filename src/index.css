@@ -92,3 +92,11 @@ textarea {
   color: var(--c-suave);
   margin-bottom: 0.25rem;
 }
+
+/* listas roláveis na horizontal (chips) sem a barra de rolagem aparente */
+.sem-barra {
+  scrollbar-width: none;
+}
+.sem-barra::-webkit-scrollbar {
+  display: none;
+}

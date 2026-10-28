@@ -9,11 +9,14 @@ import {
   PRIORIDADES,
   TIPOS,
   type Categoria,
+  type Presente,
   type Item,
   type ItemDados,
   type Status,
   type Tipo,
 } from '../types'
+import { Compras } from './GerenciarLista'
+import { CampoImagem, FotoItem } from './Imagem'
 import { IconLink, IconLivro, IconLixo, IconMais, IconX, Segmentado, SeloPrioridade, Sheet } from './ui'
 
 interface LinkForm {
@@ -36,6 +39,7 @@ interface Form {
   fonte: string
   nota: string
   links: LinkForm[]
+  imagem: string
   categoria_anterior: string | null
 }
 
@@ -54,6 +58,7 @@ function paraForm(i: Item): Form {
     fonte: i.fonte,
     nota: i.nota,
     links: i.links.map((l) => ({ url: l.url, loja: l.loja, preco: precoParaTexto(l.preco) })),
+    imagem: i.imagem ?? '',
     categoria_anterior: i.categoria_anterior ?? null,
   }
 }
@@ -73,6 +78,7 @@ export function novoForm(base: Partial<Form>): Form {
     fonte: '',
     nota: '',
     links: [],
+    imagem: '',
     categoria_anterior: null,
     ...base,
   }
@@ -101,6 +107,7 @@ function paraDados(f: Form): ItemDados {
     links: f.links
       .filter((l) => l.url.trim())
       .map((l) => ({ url: url(l.url), loja: l.loja.trim(), preco: lerPreco(l.preco) })),
+    imagem: f.imagem || null,
     categoria_anterior: f.categoria_anterior,
   }
 }
@@ -111,12 +118,15 @@ export type Alvo = { tipo: 'existente'; id: string } | { tipo: 'novo'; base: Par
 export default function ItemSheet({
   alvo,
   item,
+  presente,
   categorias,
   aoFechar,
 }: {
   alvo: Alvo
   /** versão ao vivo do item (null ao criar) */
   item: Item | null
+  /** cópia pública na lista de presentes, se houver */
+  presente?: Presente
   categorias: Categoria[]
   aoFechar: () => void
 }) {
@@ -220,6 +230,7 @@ export default function ItemSheet({
           </button>
         }
       >
+        {item.imagem && <FotoItem src={item.imagem} alt={item.nome} className="mb-4 aspect-[4/3] w-full rounded-2xl" />}
         <div className="text-suave mb-4 flex flex-wrap items-center gap-2 text-sm">
           <SeloPrioridade p={item.prioridade} />
           <span>{item.categoria}</span>·<span>{item.tipo}</span>
@@ -281,6 +292,35 @@ export default function ItemSheet({
           ))}
         </div>
 
+        {item.tipo === 'Comprar' && (
+          <div className="mt-6">
+            <div className="rotulo">Lista de presentes</div>
+            <div className="bg-cartao border-linha rounded-2xl border p-3">
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={!!item.na_lista}
+                  onChange={() => atualizarItem(item.id, { na_lista: !item.na_lista }).catch((e) => alert(e.message))}
+                  className="accent-salvia h-5 w-5"
+                />
+                Mostrar na lista para família e amigos
+              </label>
+              {item.na_lista && (
+                <label className="text-suave mt-2 ml-8 flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!item.lista_multiplo}
+                    onChange={() => atualizarItem(item.id, { lista_multiplo: !item.lista_multiplo }).catch((e) => alert(e.message))}
+                    className="accent-salvia"
+                  />
+                  Várias pessoas podem dar
+                </label>
+              )}
+              {presente && presente.compras.length > 0 && <Compras presente={presente} recuo={false} />}
+            </div>
+          </div>
+        )}
+
         {item.atualizado_por && (
           <p className="text-suave mt-6 text-center text-xs">
             Última alteração por {item.atualizado_por} {dataCurta(item.atualizado_em)}
@@ -322,6 +362,8 @@ export default function ItemSheet({
           <label className="rotulo">Nome</label>
           <input className="campo" value={form.nome} onChange={(e) => set('nome', e.target.value)} autoFocus={!item} />
         </div>
+
+        {!naoComprar && <CampoImagem valor={form.imagem} aoMudar={(v) => set('imagem', v)} />}
 
         <div>
           <div className="rotulo">Tipo</div>

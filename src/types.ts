@@ -39,9 +39,16 @@ export interface Item {
   preco_estimado: number | null
   preco_pago: number | null
   links: LinkCompra[]
+  /** URL da imagem da loja ou data URL comprimido (ver comprimirImagem) */
+  imagem?: string | null
   status: Status
   // categoria de origem, para restaurar quando um item volta do "Não comprar"
   categoria_anterior?: string | null
+  // lista de presentes (página pública /presentes)
+  na_lista?: boolean
+  lista_multiplo?: boolean
+  // quantas compras de convidados já foram refletidas no status deste item
+  presentes_vistos?: number
   feito_por?: string | null
   feito_em?: Timestamp | null
   atualizado_por?: string | null
@@ -50,6 +57,35 @@ export interface Item {
 }
 
 export type ItemDados = Omit<Item, 'id'>
+
+export interface Compra {
+  nome: string
+  forma: 'link' | 'fora'
+  mensagem: string
+  quando: Timestamp
+}
+
+/** Cópia pública de um item, em /presentes/{itemId}. Só os donos editam; convidados só acrescentam compras. */
+export interface Presente {
+  id: string
+  nome: string
+  categoria: string
+  ordem_categoria: number
+  numero: number
+  quantidade: string
+  nota: string
+  faixa: string
+  imagem: string | null
+  links: LinkCompra[]
+  multiplo: boolean
+  visivel: boolean
+  compras: Compra[]
+}
+
+export interface ConfigLista {
+  titulo: string
+  mensagem: string
+}
 
 export interface Categoria {
   id: string

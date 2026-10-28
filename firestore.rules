@@ -16,7 +16,8 @@ service cloud.firestore {
         && d.categoria is string
         && d.tipo in ['Comprar', 'Fazer em casa', 'Ajuste da casa', 'Tarefa', 'Não comprar']
         && d.status in ['Pendente', 'Em andamento', 'Feito', 'Decidido']
-        && d.links is list && d.links.size() <= 30;
+        && d.links is list && d.links.size() <= 30
+        && (!('imagem' in d) || d.imagem == null || (d.imagem is string && d.imagem.size() < 300000));
     }
 
     // Cada pessoa só consegue ler o próprio documento de acesso (para o app saber se pode entrar).
@@ -28,6 +29,43 @@ service cloud.firestore {
     match /itens/{id} {
       allow read, delete: if permitido();
       allow create, update: if permitido() && itemValido(request.resource.data);
+    }
+
+    // ---------- Lista de presentes (página pública /presentes) ----------
+    // Qualquer pessoa com o link lê. Convidados (sem login) só podem ACRESCENTAR uma compra
+    // ao fim da lista "compras" de um presente visível; item de compra única só aceita a primeira.
+
+    function compraValida(c) {
+      return c.keys().hasOnly(['nome', 'forma', 'mensagem', 'quando'])
+        && c.nome is string && c.nome.size() > 0 && c.nome.size() <= 60
+        && c.forma in ['link', 'fora']
+        && c.mensagem is string && c.mensagem.size() <= 300
+        && c.quando is timestamp
+        && c.quando > request.time - duration.value(10, 'm')
+        && c.quando < request.time + duration.value(10, 'm');
+    }
+
+    function novaCompraDeConvidado() {
+      let antes = resource.data.compras;
+      let depois = request.resource.data.compras;
+      return resource.data.visivel == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['compras'])
+        && depois.size() == antes.size() + 1
+        && (resource.data.multiplo == true || antes.size() == 0)
+        && antes.size() < 50
+        && depois.hasAll(antes)
+        && compraValida(depois[antes.size()]);
+    }
+
+    match /presentes/{id} {
+      allow read: if true;
+      allow create, delete: if permitido();
+      allow update: if permitido() || novaCompraDeConvidado();
+    }
+
+    match /config/{id} {
+      allow read: if true;
+      allow write: if permitido();
     }
 
     match /categorias/{id} {
