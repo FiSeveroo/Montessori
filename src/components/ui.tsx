@@ -38,7 +38,11 @@ export function Sheet({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
-        {rodape && <div className="border-linha pb-safe border-t px-4 pt-3 pb-3">{rodape}</div>}
+        {rodape && (
+          <div className="border-linha border-t px-4 pt-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+            {rodape}
+          </div>
+        )}
       </div>
     </div>
   )

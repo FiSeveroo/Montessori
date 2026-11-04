@@ -186,7 +186,8 @@ export default function ListaPublica() {
           <div className="text-suave flex items-center justify-between gap-2 px-4 pb-3 text-sm">
             <span>
               {filtrando ? `${visiveis.length} encontrados · ` : ''}
-              {disponiveis} disponíveis · {comprados} presenteados
+              {disponiveis} {disponiveis === 1 ? 'disponível' : 'disponíveis'} · {comprados}{' '}
+              {comprados === 1 ? 'presenteado' : 'presenteados'}
             </span>
             <select
               value={ordem}
@@ -251,7 +252,7 @@ export default function ListaPublica() {
           <div className="bg-salvia flex items-center gap-3 rounded-2xl p-4 text-white shadow-xl">
             <span className="text-2xl">💛</span>
             <p className="flex-1 text-sm">
-              <b>Obrigado, {obrigado}!</b> Já avisamos os pais.
+              <b>Obrigado, {obrigado}!</b> Seu presente foi registrado.
             </p>
             <button onClick={() => setObrigado(null)} className="text-sm font-semibold underline">
               Ok
