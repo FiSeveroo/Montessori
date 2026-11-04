@@ -8,7 +8,7 @@ import { Chip, IconBusca, IconCheck, IconLink, IconX, Sheet } from './ui'
 
 const CHAVE_NOME = 'enxoval.convidado'
 
-// Faixas de investimento como o convidado entende (o preço exato só aparece ao abrir o item)
+// Faixas de investimento como o convidado entende
 const FAIXA_PUBLICA: Record<string, string> = {
   $: 'Até R$ 100',
   $$: 'R$ 100 a 500',
@@ -17,6 +17,36 @@ const FAIXA_PUBLICA: Record<string, string> = {
 const ORDEM_FAIXA: Record<string, number> = { $: 1, $$: 2, $$$: 3 }
 
 type Ordem = 'categoria' | 'menor' | 'maior'
+
+/** Preço mostrado ao convidado: o link mais barato ou, sem preço nos links, o estimado. */
+function precoDe(p: Presente): number | null {
+  const precos = p.links.map((l) => l.preco).filter((v): v is number => v != null)
+  return precos.length ? Math.min(...precos) : p.preco_estimado
+}
+
+/** Com preço, a faixa vem dele; a faixa cadastrada só vale para itens ainda sem preço. */
+function faixaDe(p: Presente): string {
+  const preco = precoDe(p)
+  if (preco == null) return p.faixa
+  return preco <= 100 ? '$' : preco <= 500 ? '$$' : '$$$'
+}
+
+/** Ex.: "R$ 20,00" ou, se os links têm preços diferentes, "a partir de R$ 20,00". */
+function textoPreco(p: Presente): string | null {
+  const preco = precoDe(p)
+  if (preco == null) return null
+  const varia = new Set(p.links.map((l) => l.preco).filter((v) => v != null)).size > 1
+  return `${varia ? 'a partir de ' : ''}${formatarBRL(preco)}`
+}
+
+function compararPreco(a: Presente, b: Presente, sentido: 1 | -1): number {
+  const pa = precoDe(a)
+  const pb = precoDe(b)
+  if (pa != null && pb != null) return (pa - pb) * sentido
+  if (pa != null) return -1 // sem preço sempre no fim
+  if (pb != null) return 1
+  return ((ORDEM_FAIXA[a.faixa] ?? 0) - (ORDEM_FAIXA[b.faixa] ?? 0)) * sentido
+}
 
 /** Página aberta pelos convidados (sem login). Só lê /presentes e /config/lista. */
 export default function ListaPublica() {
@@ -42,7 +72,7 @@ export default function ListaPublica() {
   }, [presentes])
 
   const faixasExistentes = useMemo(
-    () => Object.keys(FAIXA_PUBLICA).filter((f) => presentes.some((p) => p.faixa === f)),
+    () => Object.keys(FAIXA_PUBLICA).filter((f) => presentes.some((p) => faixaDe(p) === f)),
     [presentes],
   )
 
@@ -50,19 +80,18 @@ export default function ListaPublica() {
     const q = semAcento(busca.trim())
     const porCategoria = (a: Presente, b: Presente) =>
       a.ordem_categoria - b.ordem_categoria || a.categoria.localeCompare(b.categoria) || a.numero - b.numero
-    const faixa = (p: Presente) => ORDEM_FAIXA[p.faixa] ?? 0
     return presentes
       .filter(
         (p) =>
           (mostrarComprados || !esgotado(p)) &&
           (!categoria || p.categoria === categoria) &&
-          (faixas.length === 0 || faixas.includes(p.faixa)) &&
+          (faixas.length === 0 || faixas.includes(faixaDe(p))) &&
           (!q || semAcento(`${p.nome} ${p.nota}`).includes(q)),
       )
       .sort(
         (a, b) =>
           Number(esgotado(a)) - Number(esgotado(b)) ||
-          (ordem === 'menor' ? faixa(a) - faixa(b) : ordem === 'maior' ? faixa(b) - faixa(a) : 0) ||
+          (ordem === 'menor' ? compararPreco(a, b, 1) : ordem === 'maior' ? compararPreco(a, b, -1) : 0) ||
           porCategoria(a, b),
       )
   }, [presentes, busca, categoria, faixas, ordem, mostrarComprados])
@@ -252,6 +281,7 @@ function SeloStatus({ p }: { p: Presente }) {
 
 function CartaoPresente({ p, aoAbrir }: { p: Presente; aoAbrir: () => void }) {
   const fechado = esgotado(p)
+  const preco = textoPreco(p)
   return (
     <button
       onClick={aoAbrir}
@@ -268,7 +298,11 @@ function CartaoPresente({ p, aoAbrir }: { p: Presente; aoAbrir: () => void }) {
       <div className="flex flex-1 flex-col p-3">
         <div className={`line-clamp-3 text-sm leading-snug font-semibold ${fechado ? 'line-through' : ''}`}>{p.nome}</div>
         <div className="mt-auto pt-2">
-          {FAIXA_PUBLICA[p.faixa] && <span className="text-suave text-xs">{FAIXA_PUBLICA[p.faixa]}</span>}
+          {preco ? (
+            <span className="font-bold">{preco}</span>
+          ) : (
+            FAIXA_PUBLICA[p.faixa] && <span className="text-suave text-xs">{FAIXA_PUBLICA[p.faixa]}</span>
+          )}
         </div>
       </div>
     </button>
@@ -301,9 +335,10 @@ function DetalhePresente({ p, aoFechar, aoComprar }: { p: Presente; aoFechar: ()
 
       <div className="text-suave mb-3 flex flex-wrap gap-x-2 text-sm">
         <span>{p.categoria}</span>
-        {FAIXA_PUBLICA[p.faixa] && <span>· {FAIXA_PUBLICA[p.faixa]}</span>}
+        {!textoPreco(p) && FAIXA_PUBLICA[p.faixa] && <span>· {FAIXA_PUBLICA[p.faixa]}</span>}
         {p.quantidade && <span>· Quantidade sugerida: {p.quantidade}</span>}
       </div>
+      {textoPreco(p) && <p className="mb-3 text-xl font-bold">{textoPreco(p)}</p>}
 
       {p.nota && <p className="mb-4 leading-relaxed">{p.nota}</p>}
 

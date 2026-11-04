@@ -24,7 +24,8 @@ const ORDENS: { v: Ordem; rotulo: string }[] = [
 
 const ordemFaixa = (i: Item) => ({ $: 1, $$: 2, $$$: 3 })[i.faixa_investimento as '$'] ?? 0
 
-const STATUS_ATIVOS =['Pendente', 'Em andamento', 'Feito'] as const
+const FOTOS = ['Sem foto', 'Com foto'] as const
+const STATUS_ATIVOS = ['Pendente', 'Em andamento', 'Feito'] as const
 const TIPOS_ATIVOS = TIPOS.filter((t) => t !== 'Não comprar')
 
 interface Filtros {
@@ -34,6 +35,7 @@ interface Filtros {
   faixas: string[]
   fases: string[]
   prioridades: string[]
+  fotos: string[]
   ordem: Ordem
 }
 
@@ -44,6 +46,7 @@ const VAZIO: Filtros = {
   faixas: [],
   fases: [],
   prioridades: [],
+  fotos: [],
   ordem: 'categoria',
 }
 
@@ -93,6 +96,7 @@ export default function Lista({
         passa(filtros.faixas, i.faixa_investimento) &&
         passa(filtros.fases, i.fase) &&
         passa(filtros.prioridades, i.prioridade) &&
+        passa(filtros.fotos, i.imagem ? 'Com foto' : 'Sem foto') &&
         (!q || semAcento(`${i.nome} ${i.nota} ${i.fonte}`).includes(q)),
     )
 
@@ -145,7 +149,7 @@ export default function Lista({
   }, [visiveis, filtros.ordem])
 
   const ativos: { dim: Dimensao; v: string }[] = (
-    ['categorias', 'tipos', 'status', 'faixas', 'fases', 'prioridades'] as Dimensao[]
+    ['categorias', 'tipos', 'status', 'faixas', 'fases', 'prioridades', 'fotos'] as Dimensao[]
   ).flatMap((dim) => filtros[dim].map((v) => ({ dim, v })))
 
   const categoriasAtivas = categorias.filter((c) => c.nome !== 'Não comprar')
@@ -261,6 +265,13 @@ export default function Lista({
         <Grupo titulo="Status">
           {STATUS_ATIVOS.map((v) => (
             <Chip key={v} ativo={filtros.status.includes(v)} onClick={() => alternar('status', v)}>
+              {v}
+            </Chip>
+          ))}
+        </Grupo>
+        <Grupo titulo="Foto">
+          {FOTOS.map((v) => (
+            <Chip key={v} ativo={filtros.fotos.includes(v)} onClick={() => alternar('fotos', v)}>
               {v}
             </Chip>
           ))}

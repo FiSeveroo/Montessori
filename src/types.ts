@@ -75,6 +75,7 @@ export interface Presente {
   quantidade: string
   nota: string
   faixa: string
+  preco_estimado: number | null
   imagem: string | null
   links: LinkCompra[]
   multiplo: boolean
